@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+  <!-- Login -->
+  <div id="loginSection" class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+      <h2 class="text-xl font-bold mb-1">Acceso Administrador</h2>
+      <p class="text-xs text-slate-500 mb-4">La sesión se mantiene activa por 1 minuto aunque refresques.</p>
+      <input type="text" id="adminUser" placeholder="Usuario" class="p-2 border w-full mb-3 rounded" />
+      <input type="password" id="adminPass" placeholder="Contraseña" class="p-2 border w-full mb-3 rounded" />
+      <button id="loginBtn" class="w-full bg-blue-700 hover:bg-blue-800 text-white py-2 rounded">Ingresar</button>
+      <p id="loginHint" class="text-xs text-slate-500 mt-2"></p>
+    </div>
+  </div>
+
+  <!-- Panel -->
+  <div id="adminPanel" class="hidden min-h-screen">
+    <header class="bg-white border-b">
+  <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="menuToggle" class="text-2xl text-slate-700 hover:text-black">☰</button>
+      <!-- Botón hamburguesa -->
+      <span class="text-xl font-bold">Panel de Administración</span>
+      <span class="text-xs bg-amber-300 text-black px-2 py-0.5 rounded-full">La fórmula</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="../index.html" class="text-blue-700 hover:underline">Ver Tienda</a>
+      <button id="logoutBtn" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded">Cerrar Sesión</button>
+    </div>
+  </div>
+</header>
+<!-- Menú lateral oculto al inicio -->
+<aside id="sidebar"
+  class="fixed left-0 top-0 h-full w-60 bg-white shadow-xl border-r p-4 z-40 overflow-y-auto transform -translate-x-full transition-transform duration-300">
+  <h2 class="text-lg font-bold mb-4">Menú</h2>
+  <nav class="space-y-2 text-sm">
+    <button class="menuBtn w-full text-left px-3 py-2 rounded bg-blue-800 text-white shadow"
+      data-tab="dashboard">Panel</button>
+    <button class="menuBtn w-full text-left px-3 py-2 rounded hover:bg-slate-100"
+      data-tab="catalogo">Catálogo</button>
+    <button class="menuBtn w-full text-left px-3 py-2 rounded hover:bg-slate-100"
+      data-tab="carrusel">Carrusel</button>
+    <button class="menuBtn w-full text-left px-3 py-2 rounded hover:bg-slate-100"
+      data-tab="marca">Marca & Contacto</button>
+    <button class="menuBtn w-full text-left px-3 py-2 rounded hover:bg-slate-100"
+      data-tab="pedidos">Pedidos</button>
+    <button class="menuBtn w-full text-left px-3 py-2 rounded hover:bg-slate-100"
+      data-tab="historial"></button>
+  </nav>
+</aside>
+  <main id="mainContent" class="transition-all duration-300 ml-0 px-6 py-4">
+     <div class="grid grid-cols-12 gap-4"></div>
+        <!-- Content -->
+        <section class="col-span-12 md:col-span-9 lg:col-span-10 space-y-4">
+          <!-- Dashboard -->
+          <section id="tab-dashboard" class="tabSection grid lg:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow">
+              <h3 class="font-bold mb-3">Métricas</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-50 p-3 rounded">
+                  <p class="text-xs opacity-70">Productos</p>
+                  <p id="kpiProducts" class="text-2xl font-extrabold">0</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded">
+                  <p class="text-xs opacity-70">Categorías</p>
+                  <p id="kpiCategories" class="text-2xl font-extrabold">0</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded">
+                  <p class="text-xs opacity-70">Pedidos</p>
+                  <p id="kpiOrders" class="text-2xl font-extrabold">0</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded">
+                  <p class="text-xs opacity-70">Ingresos totales</p>
+                  <p id="kpiRevenue" class="text-2xl font-extrabold">Bs 0</p>
+                </div>
+              </div>
+              <div class="mt-4">
+                <canvas id="chartByCategory" height="160"></canvas>
+              </div>
+              <!-- 🔹 Gráfico de ventas -->
+              <div class="mt-4 flex gap-2">
+                <button id="archiveNow" class="bg-indigo-600 text-white px-3 py-1 rounded">Archivar ahora</button>
+                <button id="resetMetrics" class="bg-rose-600 text-white px-3 py-1 rounded">Limpiar métricas</button>
+              </div>
+            </div>
+          </section>
+          <!-- Catálogo -->
+          <section id="tab-catalogo" class="tabSection hidden grid lg:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow">
+              <div class="flex justify-between items-center mb-3">
+  <h3 class="font-bold">Copia de Seguridad</h3>
+  <div class="flex gap-2">
+    <button id="importBtn" class="text-sm px-3 py-1 rounded bg-sky-600 hover:bg-sky-700 text-white">Importar JSON</button>
+    <button id="exportBtn" class="text-sm px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white">Exportar JSON</button>
+    <input type="file" id="importFile" class="hidden" accept=".json" />
+  </div>
+</div>
+              <form id="addCategoryForm" class="flex gap-2 mb-3">
+                <input type="text" id="categoryName" placeholder="Nueva categoría" class="border p-2 flex-1 rounded" required />
+                <button class="bg-green-600 hover:bg-green-700 text-white px-3 rounded">Agregar</button>
+              </form>
+              <ul id="categoryList" class="space-y-2"></ul>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow lg:col-span-2">
+              <h3 class="font-bold mb-3">Agregar / Editar Producto</h3>
+              <form id="addProductForm" class="grid grid-cols-2 gap-3">
+                <input type="hidden" id="productId" />
+                <input type="text" id="productName" placeholder="Nombre" class="border p-2 rounded col-span-2" required />
+                <textarea id="productDescription" placeholder="Descripción" class="border p-2 rounded col-span-2"></textarea>
+                <select id="productCategory" class="border p-2 rounded col-span-1" required></select>
+                <input type="number" id="productPrice" placeholder="Precio Bs" step="0.01" class="border p-2 rounded col-span-1" required />
+                <input type="number" id="productDiscount" placeholder="Descuento % (0-100)" min="0" max="100" class="border p-2 rounded col-span-1" />
+<input type="number" id="productQuantity" placeholder="Cantidad en stock" min="0" class="border p-2 rounded col-span-1" />
+<input type="file" id="productImage" accept="image/*" class="col-span-1" />
+                <div class="col-span-2 flex gap-2">
+                  <button class="bg-blue-700 hover:bg-blue-800 text-white py-2 px-3 rounded" id="saveProductBtn">Guardar</button>
+                  <button type="button" id="deleteProductBtn" class="bg-rose-600 hover:bg-rose-700 text-white px-3 rounded hidden">Eliminar</button>
+                  <button type="button" id="resetForm" class="bg-slate-200 px-3 rounded">Limpiar</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow lg:col-span-3">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold">Productos</h3>
+                <div class="text-sm opacity-80">Click en un producto para editar</div>
+              </div>
+              <div id="adminProductList" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+            </div>
+          </section>
+
+          <!-- Carrusel -->
+          <section id="tab-carrusel" class="tabSection hidden grid lg:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow lg:col-span-3">
+              <h3 class="font-bold mb-3">Carrusel (imágenes de inicio)</h3>
+              <form id="addHeroForm" class="flex flex-col sm:flex-row gap-2 mb-3 items-center">
+                <input type="file" id="heroImage" accept="image/*" class="flex-1" required />
+                <button class="bg-blue-700 hover:bg-blue-800 text-white px-3 py-2 rounded">Agregar</button>
+              </form>
+              <div id="heroList" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+            </div>
+          </section>
+
+          <!-- Marca & Contacto -->
+          <section id="tab-marca" class="tabSection hidden grid lg:grid-cols-2 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow">
+              <h3 class="font-bold mb-3">Marca & Contacto</h3>
+              <form id="brandForm" class="grid grid-cols-2 gap-3">
+                <input type="text" id="brandName" placeholder="Nombre de la tienda" class="border p-2 rounded col-span-2" />
+                <input type="text" id="brandAddress" placeholder="Dirección" class="border p-2 rounded col-span-2" />
+                <input type="text" id="brandPhone" placeholder="Teléfono" class="border p-2 rounded col-span-1" />
+                <input type="email" id="brandEmail" placeholder="Email" class="border p-2 rounded col-span-1" />
+                <input type="file" id="brandLogo" accept="image/*" class="col-span-2" />
+                <div class="col-span-2 flex gap-2">
+                  <button class="bg-blue-700 hover:bg-blue-800 text-white py-2 px-3 rounded" id="saveBrandBtn">Guardar Marca</button>
+                  <button type="button" class="bg-slate-200 px-3 rounded" id="resetBrandBtn">Restablecer</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <!-- Pedidos -->
+          <section id="tab-pedidos" class="tabSection hidden grid lg:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow lg:col-span-3">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold">Pedidos (en vivo)</h3>
+                <div class="text-sm opacity-80">Validar / invalidar pedidos</div>
+              </div>
+              <div id="ordersList" class="space-y-3"></div>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+<script>
+  const toggleBtn = document.getElementById("menuToggle");
+  const sidebar = document.getElementById("sidebar");
+  const mainContent = document.getElementById("mainContent");
+
+  let menuAbierto = false;
+
+  function abrirMenu() {
+    sidebar.classList.remove("-translate-x-full");
+    mainContent.classList.add("ml-64");
+    toggleBtn.textContent = "✖";
+    menuAbierto = true;
+  }
+
+  function cerrarMenu() {
+    sidebar.classList.add("-translate-x-full");
+    mainContent.classList.remove("ml-64");
+    toggleBtn.textContent = "☰";
+    menuAbierto = false;
+  }
+
+  if (toggleBtn && sidebar && mainContent) {
+    // 🔹 Clic en el botón hamburguesa
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // evita que el clic cierre inmediatamente
+      if (menuAbierto) cerrarMenu();
+      else abrirMenu();
+    });
+
+    // 🔹 Clic fuera del menú (en cualquier parte del contenido)
+    document.addEventListener("click", (e) => {
+      if (
+        menuAbierto &&
+        !sidebar.contains(e.target) && // no clic dentro del menú
+        !toggleBtn.contains(e.target)  // ni en el botón
+      ) {
+        cerrarMenu();
+      }
+    });
+
+    // 🔹 También cerrar con la tecla Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && menuAbierto) cerrarMenu();
+    });
+  }
+</script>
+
+
+  <script src="../js/config.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>

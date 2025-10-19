@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Librería en Línea - La Fórmula</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  #productModal.flex {animation: modalZoom .3s ease;}
+  @keyframes modalZoom {from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+
+  :root {
+    --brand-red:#c8102e;
+    --brand-red-dark:#a40d26;
+    --brand-gray:#6b7280;
+  }
+
+  body{
+    background: radial-gradient(circle at 20% 20%, #2838c7, #1a1f46 70%);
+    font-family:"Poppins",sans-serif;
+    color:#f1f5f9; /* texto claro */
+  }
+
+  header{
+    background:rgba(15,23,42,.95);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(255,255,255,.12);
+    color:#fff;
+  }
+
+  #productContainer>*{
+    position:relative;
+    background:linear-gradient(180deg,#ff7e24,#ff2670);
+    border:none;
+    border-radius:14px;
+    color:#fff;             /* texto claro sobre tarjeta */
+    overflow:hidden;
+    transition:transform .3s ease,box-shadow .3s ease;
+    box-shadow:0 10px 20px rgba(0,0,0,.25);
+  }
+  #productContainer>*:hover{
+    transform:translateY(-8px);
+    box-shadow:0 18px 35px rgba(0,0,0,.45);
+  }
+  #productContainer>* img{transition:transform .3s ease;}
+  #productContainer>*:hover img{transform:scale(1.05);}
+
+  .btn-primary,
+  #cartButton,
+  #modalAddToCart,
+  #fabCart{
+    background:linear-gradient(90deg,#ff0055,#ff6a00);
+    color:#fff;
+    border-radius:9999px;
+    font-weight:600;
+    transition:all .3s ease;
+  }
+  .btn-primary:hover,
+  #cartButton:hover,
+  #modalAddToCart:hover,
+  #fabCart:hover{
+    filter:brightness(1.1);
+    transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(255,0,100,.4);
+  }
+
+  #heroPrev,#heroNext{
+    opacity:0;pointer-events:none;
+    transform:translateY(-50%) scale(.9);
+    transition:opacity .25s ease,transform .25s ease;
+    background:rgba(17,24,39,.55);
+    color:#f9fafb;
+    border-radius:9999px;
+  }
+  #heroCarousel:hover #heroPrev,#heroCarousel:hover #heroNext{
+    opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1);
+  }
+  #heroPrev:hover,#heroNext:hover{background:#ff0055;color:#fff;}
+
+  #productModal .rounded-xl,#cartModal .rounded-xl{
+    border:1px solid #eef2f7;
+    box-shadow:0 20px 50px rgba(0,0,0,.35);
+  }
+
+  footer{background:#0b1121;color:#e2e8f0;}
+  footer h3{color:#ff6a99;}
+  footer p,footer div{color:#cbd5e1;}
+
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
+    outline:3px solid rgba(255,0,85,.4);
+    outline-offset:2px;border-radius:10px;
+  }
+  /* ====== TEXTO EN TARJETAS (más grande y legible) ====== */
+#productContainer > * h3 {
+  font-size: 1.25rem;            /* más grande */
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.35); /* contraste con el fondo */
+  margin-bottom: 0.25rem;
+}
+#productContainer > * p {
+  color: #f9f9f9;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+#productContainer > * .price,
+#productContainer > * strong,
+#productContainer > * span {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+</style>
+
+</head>
+
+<body class="min-h-screen flex flex-col text-slate-900">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 text-white shadow-lg">
+    <div class="container mx-auto px-5 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl font-extrabold tracking-tight">La Fórmula</span>
+        <img id="brandLogo" alt="Logo" class="hidden w-10 h-10 rounded-full object-cover ring-2 ring-white/30" />
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Buscador -->
+        <div class="relative flex items-center">
+          <button id="searchToggle" class="text-white hover:text-gray-300 transition" title="Buscar">
+            <i data-lucide="search" class="w-6 h-6"></i>
+          </button>
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Buscar productos..."
+            class="hidden w-0 px-3 py-2 rounded-full border border-slate-300 focus:ring-2 focus:ring-pink-500 outline-none transition-all duration-300 ease-in-out text-slate-800"
+          />
+        </div>
+
+        <!-- Carrito -->
+        <button id="cartButton" class="relative btn-primary px-4 py-2 shadow-lg flex items-center gap-2">
+          <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+          (<span id="cartCount">0</span>)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Controles -->
+  <section class="container mx-auto px-4 py-5">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <select id="filterCategory" class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-black shadow-sm focus:ring-2 focus:ring-pink-500">
+        <option value="all">Todas las categorías</option>
+      </select>
+      <select id="sortBy" class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-black shadow-sm focus:ring-2 focus:ring-pink-500">
+        <option value="recent">Más recientes</option>
+        <option value="price-asc">Precio: menor a mayor</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+        <option value="name-asc">Nombre A-Z</option>
+        <option value="name-desc">Nombre Z-A</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- Hero -->
+  <section class="container mx-auto px-4">
+    <div id="heroCarousel" class="relative rounded-2xl overflow-hidden shadow-xl group">
+      <div id="heroSlides" class="w-full h-56 md:h-72 lg:h-96 bg-gradient-to-br from-blue-600 to-indigo-900"></div>
+      <button id="heroPrev" class="absolute left-3 top-1/2 -translate-y-1/2 p-2">
+        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+      </button>
+      <button id="heroNext" class="absolute right-3 top-1/2 -translate-y-1/2 p-2">
+        <i data-lucide="chevron-right" class="w-6 h-6"></i>
+      </button>
+      <div id="heroDots" class="absolute bottom-3 left-0 right-0 flex justify-center gap-2"></div>
+    </div>
+  </section>
+
+  <!-- Productos -->
+  <main id="productContainer" class="container mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></main>
+
+  <!-- Modales (sin cambios funcionales) -->
+  <div id="productModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 id="modalTitle" class="text-2xl font-bold text-slate-800"></h3>
+        <button id="modalClose" class="text-slate-500 hover:text-pink-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="grid md:grid-cols-2">
+        <img id="modalImage" class="w-full h-64 object-cover" alt="Producto" />
+        <div class="p-5 flex flex-col gap-2">
+          <p id="modalCategory" class="text-sm text-slate-500"></p>
+          <p id="modalDesc" class="text-slate-700 text-sm"></p>
+          <p class="text-3xl font-extrabold text-pink-600">Bs <span id="modalPrice"></span></p>
+          <p id="modalStock" class="text-sm text-slate-500"></p>
+          <div class="flex gap-2 items-center mt-2">
+            <input id="modalQty" type="number" min="1" value="1" class="w-20 px-3 py-1 border rounded-lg focus:ring-2 focus:ring-pink-500" />
+            <button id="modalAddToCart" class="btn-primary px-5 py-2 flex items-center gap-2">
+              <i data-lucide="plus-circle" class="w-5 h-5"></i> Agregar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carrito -->
+  <div id="cartModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="shopping-cart" class="w-6 h-6 text-pink-600"></i> Tu Carrito
+        </h2>
+        <button id="closeCart" class="text-slate-500 hover:text-pink-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="cartItems" class="p-4 max-h-[50vh] overflow-auto"></div>
+      <div class="p-4 border-t flex justify-between items-center">
+        <p class="font-semibold text-lg">Total:
+          <span class="text-pink-600 font-bold">Bs <span id="cartTotal">0</span></span>
+        </p>
+        <button id="checkoutButton" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg shadow-md flex items-center gap-2">
+          <i data-lucide="message-square" class="w-5 h-5"></i> Comprar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto bg-gray-950 text-gray-100">
+    <div class="container mx-auto px-6 py-10">
+      <div class="grid md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-2 text-pink-400">La Fórmula</h3>
+          <p class="text-sm opacity-80">Tu librería en línea. Encuentra el conocimiento que te inspira.</p>
+        </div>
+        <div id="contactInfo" class="text-sm space-y-1"></div>
+        <div class="flex md:justify-end justify-center">
+          <img id="brandLogo" alt="Logo" class="hidden w-20 h-20 rounded-full object-cover ring-2 ring-white/20" />
+        </div>
+      </div>
+      <div class="border-t border-white/10 pt-4 mt-6 text-center text-xs opacity-70">
+        © 2025 La Fórmula — Todos los derechos reservados.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Botón flotante -->
+  <button id="fabCart" title="Ver carrito" class="hidden fixed bottom-5 right-5 px-5 py-3 shadow-xl font-semibold z-[9999] flex items-center gap-2">
+    <i data-lucide="shopping-cart" class="w-5 h-5"></i> Ver carrito
+  </button>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>
