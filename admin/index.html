@@ -226,10 +226,13 @@
     });
   }
 </script>
-<!-- 🔥 Conexión a Firebase -->
+<!-- 🔥 Conexión a Firebase (corrigido) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import {
+    getFirestore, collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
+    doc, query, orderBy, onSnapshot, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAJRPLeyfVFyVmshekqSONm4P9ssTxhfJA",
@@ -244,11 +247,13 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // guardamos db en window para usar desde otros scripts
+  // 🔹 Exportar todo lo necesario para tus scripts
   window.DB = db;
-  window.FB = { collection, getDocs, getDoc, doc, setDoc, addDoc, deleteDoc, query, orderBy, onSnapshot };
+  window.FB = {
+    collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
+    doc, query, orderBy, onSnapshot, serverTimestamp
+  };
 </script>
-
 
   <script src="../js/config.js"></script>
   <script src="../js/admin.js"></script>
