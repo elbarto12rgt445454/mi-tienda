@@ -1,40 +1,76 @@
-// =======================================================
-// main.js — TIENDA (Firestore only, en vivo, sin localStorage)
-// =======================================================
+// ===================================================================
+// main.js — Cliente (Firestore only, live, con fallback de init)
+// ===================================================================
+(function () {
+  // ---------------- Config ----------------
+  const CFG = {
+    whatsapp: "68650455", // se usa como 591 + número
+    brandFallback: "Librería La Fórmula",
+    firebaseConfig: {
+      apiKey: "AIzaSyAJRPLeyfVFyVmshekqSONm4P9ssTxhfJA",
+      authDomain: "mi-tienda-cc21e.firebaseapp.com",
+      projectId: "mi-tienda-cc21e",
+      storageBucket: "mi-tienda-cc21e.firebasestorage.app",
+      messagingSenderId: "41230624909",
+      appId: "1:41230624909:web:f66164de53f0ad84815ac4",
+      measurementId: "G-KM2LP27PRP"
+    }
+  };
 
-(() => {
-  // Ajusta estos selectores a tu HTML. Si un elemento no existe, no rompe.
-  const $  = (s) => document.querySelector(s);
+  // ------------- Firebase ensure (fallback) -------------
+  async function ensureFirebase() {
+    if (window.DB && window.FB) {
+      console.log("[main] Firebase detectado en HTML");
+      return;
+    }
+    console.log("[main] Inyectando Firebase (fallback)...");
+    const code = `
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+      import {
+        getFirestore, collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
+        doc, query, orderBy, onSnapshot, serverTimestamp
+      } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+      const app = initializeApp(${JSON.stringify(CFG.firebaseConfig)});
+      window.DB = getFirestore(app);
+      window.FB = { collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, serverTimestamp };
+    `;
+    const s = document.createElement("script");
+    s.type = "module";
+    s.textContent = code;
+    document.head.appendChild(s);
+
+    const until = Date.now() + 5000;
+    while (!(window.DB && window.FB)) {
+      if (Date.now() > until) throw new Error("No se pudo inicializar Firebase en main.js");
+      await new Promise(r => setTimeout(r, 40));
+    }
+    console.log("[main] Firebase listo (fallback).");
+  }
+
+  // ---------------- Estado / Selectores ----------------
+  const $ = (sel) => document.querySelector(sel);
   const els = {
     hero:        $("#hero"),
     brandName:   $("#brandName"),
-    catFilter:   $("#categoryFilter"), // <select> opcional para filtrar
+    catFilter:   $("#categoryFilter"),
     products:    $("#products"),
     cartCount:   $("#cartCount"),
+    checkoutBtn: $("#checkoutBtn") // si lo tienes en HTML
   };
 
-  // Atajos Firestore desde el bloque global del HTML
-  const DB = window.DB;
-  const {
-    collection, addDoc, doc, query, orderBy,
-    onSnapshot, serverTimestamp
-  } = window.FB;
-
-  // Config (mantén tu número)
-  const CFG = { whatsapp: "68650455", brandFallback: "Librería La Fórmula" };
-
-  // Estado
   let PRODUCTS = [];
   let CATEGORIES = [];
   let HERO = [];
   let BRAND = {};
   let CART = [];
 
-  // Utils
+  // ---------------- Utilidades ----------------
   const money = (n) => `Bs ${Number(n || 0).toFixed(2)}`;
-  const toast = (m) => { try { console.log(m); alert(m); } catch(_){} };
+  const log   = (...a) => console.log("[main]", ...a);
+  const toast = (m) => { try { alert(m); } catch(_){} };
 
-  // Render
+  // ---------------- Render ----------------
   function renderHero() {
     if (!els.hero) return;
     els.hero.innerHTML = (HERO || []).map(src =>
@@ -61,13 +97,15 @@
           <h3>${p.name || ''}</h3>
           <p class="price">${money(p.price)}</p>
           ${p.description ? `<p class="desc">${p.description}</p>` : ""}
-          <div class="meta">
-            ${(p.category ? `<span class="tag">${p.category}</span>` : "")}
-          </div>
-          <button class="btn" onclick="addToCart('${p.id}')">Agregar</button>
+          ${p.category ? `<span class="tag">${p.category}</span>` : ""}
+          <button class="btn" data-add="${p.id}">Agregar</button>
         </div>
       </article>
     `).join("");
+    // Delegación de clicks para "Agregar"
+    els.products.querySelectorAll("[data-add]").forEach(btn => {
+      btn.addEventListener("click", (e) => addToCart(e.currentTarget.dataset.add));
+    });
   }
 
   function applyCategoryFilter() {
@@ -77,9 +115,11 @@
     renderProducts(PRODUCTS.filter(p => (p.category || "") === val));
   }
 
-  function updateCartCount() { if (els.cartCount) els.cartCount.textContent = String(CART.length); }
+  function updateCartCount() {
+    if (els.cartCount) els.cartCount.textContent = String(CART.length);
+  }
 
-  // Carrito
+  // ---------------- Carrito / Checkout ----------------
   function addToCart(id) {
     const p = PRODUCTS.find(x => x.id === id);
     if (!p) return;
@@ -91,6 +131,7 @@
   async function checkout() {
     if (!CART.length) return toast("Tu carrito está vacío.");
 
+    const { collection, addDoc, serverTimestamp } = window.FB;
     const total = CART.reduce((a, i) => a + (i.price * (i.qty || 1)), 0);
     const order = {
       createdAt: serverTimestamp(),
@@ -99,8 +140,7 @@
       status: "pending",
       valid: false
     };
-
-    await addDoc(collection(DB, "orders"), order);
+    await addDoc(collection(window.DB, "orders"), order);
 
     const lines = CART.map(i => `• ${i.name} x${i.qty || 1} - ${money(i.price * (i.qty || 1))}`).join("%0A");
     const msg = `Hola! Quiero comprar:%0A${lines}%0A%0ATotal: ${money(total)}`;
@@ -110,49 +150,58 @@
     updateCartCount();
   }
 
-  // Live listeners Firestore
+  // ---------------- Listeners Firestore ----------------
   function listenProducts() {
-    const qy = query(collection(DB, "products"), orderBy("createdAt", "desc"));
+    const { collection, query, orderBy, onSnapshot } = window.FB;
+    const qy = query(collection(window.DB, "products"), orderBy("createdAt", "desc"));
     onSnapshot(qy, snap => {
       PRODUCTS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      log("Productos:", PRODUCTS.length);
       applyCategoryFilter();
     });
   }
-
   function listenCategories() {
-    onSnapshot(collection(DB, "categories"), snap => {
+    const { collection, onSnapshot } = window.FB;
+    onSnapshot(collection(window.DB, "categories"), snap => {
       CATEGORIES = snap.docs.map(d => d.data().name);
       renderCategoryFilter();
       applyCategoryFilter();
     });
   }
-
   function listenHero() {
-    const qy = query(collection(DB, "hero"), orderBy("createdAt", "desc"));
+    const { collection, query, orderBy, onSnapshot } = window.FB;
+    const qy = query(collection(window.DB, "hero"), orderBy("createdAt", "desc"));
     onSnapshot(qy, snap => {
       HERO = snap.docs.map(d => d.data().src);
       renderHero();
     });
   }
-
   function listenBrand() {
-    onSnapshot(collection(DB, "brand"), snap => {
+    const { collection, onSnapshot } = window.FB;
+    onSnapshot(collection(window.DB, "brand"), snap => {
       BRAND = snap.empty ? {} : { id: snap.docs[0].id, ...snap.docs[0].data() };
       renderBrand();
     });
   }
 
-  // Inicio
-  window.addEventListener("DOMContentLoaded", () => {
+  // ---------------- Init ----------------
+  async function boot() {
+    await ensureFirebase();
+    // Eventos UI
     if (els.catFilter) els.catFilter.addEventListener("change", applyCategoryFilter);
+    if (els.checkoutBtn) els.checkoutBtn.addEventListener("click", checkout);
+    // Live
     listenProducts();
     listenCategories();
     listenHero();
     listenBrand();
     updateCartCount();
-  });
+    log("UI inicializada");
+  }
 
-  // Exponer
+  window.addEventListener("DOMContentLoaded", boot);
+
+  // Exponer funciones (por si tu HTML usa onclick o pruebas por consola)
   window.addToCart = addToCart;
   window.checkout = checkout;
 })();
