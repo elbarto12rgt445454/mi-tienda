@@ -91,29 +91,7 @@
     outline:3px solid rgba(255,0,85,.4);
     outline-offset:2px;border-radius:10px;
   }
-  /* ====== TEXTO EN TARJETAS (más grande y legible) ====== */
-#productContainer > * h3 {
-  font-size: 1.25rem;            /* más grande */
-  font-weight: 800;
-  color: #ffffff;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.35); /* contraste con el fondo */
-  margin-bottom: 0.25rem;
-}
-#productContainer > * p {
-  color: #f9f9f9;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
-}
-#productContainer > * .price,
-#productContainer > * strong,
-#productContainer > * span {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.4);
-}
-
+  
 </style>
 
 </head>
@@ -259,34 +237,8 @@
   </button>
 
   <!-- Scripts -->
-   <!-- 🔥 Conexión a Firebase -->
-<!-- 🔥 Conexión a Firebase (corrigido) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getFirestore, collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
-    doc, query, orderBy, onSnapshot, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAJRPLeyfVFyVmshekqSONm4P9ssTxhfJA",
-    authDomain: "mi-tienda-cc21e.firebaseapp.com",
-    projectId: "mi-tienda-cc21e",
-    storageBucket: "mi-tienda-cc21e.firebasestorage.app",
-    messagingSenderId: "41230624909",
-    appId: "1:41230624909:web:f66164de53f0ad84815ac4",
-    measurementId: "G-KM2LP27PRP"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  window.DB = getFirestore(app);
-  window.FB = {
-    collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
-    doc, query, orderBy, onSnapshot, serverTimestamp
-  };
-</script>
-  <script src="js/config.js"></script>
-  <script src="js/main.js"></script>
+ <script type="module" src="./config.js"></script>
+<script type="module" src="./main.js"></script>
   <script>lucide.createIcons();</script>
 </body>
 </html>

@@ -226,32 +226,7 @@
     });
   }
 </script>
-<!-- Firebase (antes de main.js) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getFirestore, collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
-    doc, query, orderBy, onSnapshot, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAJRPLeyfVFyVmshekqSONm4P9ssTxhfJA",
-    authDomain: "mi-tienda-cc21e.firebaseapp.com",
-    projectId: "mi-tienda-cc21e",
-    storageBucket: "mi-tienda-cc21e.firebasestorage.app",
-    messagingSenderId: "41230624909",
-    appId: "1:41230624909:web:f66164de53f0ad84815ac4",
-    measurementId: "G-KM2LP27PRP"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  window.DB = getFirestore(app);
-  window.FB = {
-    collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
-    doc, query, orderBy, onSnapshot, serverTimestamp
-  };
-</script>
-  <script src="../js/config.js"></script>
-  <script src="../js/admin.js"></script>
+  <script type="module" src="./config.js"></script>
+<script type="module" src="./admin.js"></script>
 </body>
 </html>
