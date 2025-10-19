@@ -279,10 +279,7 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // 🔹 Exportar todo lo necesario para tus scripts
-  window.DB = db;
+  window.DB = getFirestore(app);
   window.FB = {
     collection, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
     doc, query, orderBy, onSnapshot, serverTimestamp
