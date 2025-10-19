@@ -226,6 +226,27 @@
     });
   }
 </script>
+<!-- 🔥 Conexión a Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAJRPLeyfVFyVmshekqSONm4P9ssTxhfJA",
+    authDomain: "mi-tienda-cc21e.firebaseapp.com",
+    projectId: "mi-tienda-cc21e",
+    storageBucket: "mi-tienda-cc21e.firebasestorage.app",
+    messagingSenderId: "41230624909",
+    appId: "1:41230624909:web:f66164de53f0ad84815ac4",
+    measurementId: "G-KM2LP27PRP"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // guardamos db en window para usar desde otros scripts
+  window.DB = db;
+</script>
 
 
   <script src="../js/config.js"></script>
